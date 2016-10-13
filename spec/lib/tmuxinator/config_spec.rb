@@ -2,8 +2,42 @@ require "spec_helper"
 
 describe Tmuxinator::Config do
   describe "#root" do
-    it "is ~/.tmuxintaor" do
-      expect(Tmuxinator::Config.root).to eq "#{ENV['HOME']}/.tmuxinator"
+    context 'environment variable $TMUXINATOR_CONFIG is set' do
+      it "is $TMUXINATOR_CONFIG" do
+        ENV['TMUXINATOR_CONFIG'] = 'expected'
+        expect(Tmuxinator::Config.root).to eq 'expected'
+      end
+    end
+
+    context "both ~/.tmuxinator and $XDG_CONFIG_HOME/.tmuxinator exist" do
+      context "they are different directories" do
+        it "should raise" do
+          # expect do
+          #   Tmuxinator::Config.validate(name: "sample")
+          # end.to raise_error RuntimeError, %r{configuration}
+          expect do
+            Tmuxinator::Config.root
+          end.to raise_error RuntimeError, %r{configuration}
+        end
+      end
+    end
+
+    context "they are the same directory" do
+      it "is that directory" do
+        expect(Tmuxinator::Config.root).to eq "#{ENV['HOME']}/.tmuxinator"
+      end
+    end
+
+    context "only $XDG_CONFIG_HOME/.tmuxinator exists" do
+      it "is $XDG_CONFIG_HOME/.tmuxinator" do
+        expect(Tmuxinator::Config.root).to eq "#{XDG['CONFIG_HOME']}/.tmuxinator"
+      end
+    end
+
+    context "only ~/.tmuxinator exists" do
+      it "is ~/.tmuxinator" do
+        expect(Tmuxinator::Config.root).to eq "#{ENV['HOME']}/.tmuxinator"
+      end
     end
   end
 
