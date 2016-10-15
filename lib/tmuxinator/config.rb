@@ -4,18 +4,12 @@ module Tmuxinator
     NO_LOCAL_FILE_MSG = "Project file at ./.tmuxinator.yml doesn't exist."
 
     class << self
-      def root
-        root_dir = File.expand_path("#{ENV['HOME']}/.tmuxinator")
-        Dir.mkdir(root_dir) unless File.directory?(root_dir)
-        root_dir
-      end
-
       def sample
         asset_path "sample.yml"
       end
 
       def default
-        "#{ENV['HOME']}/.tmuxinator/default.yml"
+        "#{ENV['HOME']}/.tmuxinator/default.yml" # XXX
       end
 
       def default?
@@ -46,8 +40,19 @@ module Tmuxinator
         File.exist?(project(name))
       end
 
-      def project_in_root(name)
-        projects = Dir.glob("#{root}/**/*.yml")
+      def config_directory(parent)
+        directory = File.expand_path("#{parent}/.tmuxinator")
+        create_directory_if_needed(directory) # XXX remove later
+        directory
+      end
+
+      def create_directory_if_needed(dir) # XXXXXXXXXXXXXXX
+        Dir.mkdir(dir) unless File.directory?(dir) # XXX return value
+      end
+
+      def project_in(directory, name)
+        return nil if String(directory).empty?
+        projects = Dir.glob("#{directory}/**/*.yml")
         projects.detect { |project| File.basename(project, ".yml") == name }
       end
 
@@ -59,12 +64,39 @@ module Tmuxinator
         [LOCAL_DEFAULT].detect { |f| File.exist?(f) }
       end
 
+      # The directory (created if needed) in which to store new projects
+      def root
+        environment = ENV['TMUXINATOR_CONFIG']
+        if !String(environment).empty?
+          Dir.mkdir(dir) unless File.directory?(environment)
+          return environment
+        end
+        return xdg if File.directory?(xdg)
+        return home if File.directory?(home)
+        # No project directory specified or exstant, default to XDG:
+        Dir.mkdir(xdg)
+        xdg
+      end
+
+      def home
+        config_directory(ENV['HOME'])
+      end
+
+      def xdg
+        config_directory(XDG['CONFIG'])
+      end
+
       def default_project(name)
+        # Only place new projects in XDG_CONFIG_HOME if it already exists
         "#{root}/#{name}.yml"
       end
 
       def project(name)
-        project_in_root(name) || project_in_local || default_project(name)
+        project_in(ENV['TMUXINATOR_CONFIG'], name) ||
+        project_in(xdg, name) ||
+        project_in(home, name) ||
+        project_in_local || # refactor?
+        default_project(name)
       end
 
       def template
@@ -76,7 +108,10 @@ module Tmuxinator
       end
 
       def configs
-        Dir["#{Tmuxinator::Config.root}/**/*.yml"].sort.map do |path|
+        # Dir["#{Tmuxinator::Config.root}/**/*.yml"].sort.map do |path| # XXX make home and xdg. What if config appears twice?
+        # Dir["#{home}/**/*.yml"].sort.map do |path| # XXX make home and xdg. What if config appears twice?
+        files = Dir["#{home}/**/*.yml"] + Dir["#{home}/**/*.yml"]
+        files.sort.map do |path|
           path.gsub("#{Tmuxinator::Config.root}/", "").gsub(".yml", "")
         end
       end

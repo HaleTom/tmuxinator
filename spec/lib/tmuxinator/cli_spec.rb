@@ -231,8 +231,8 @@ describe Tmuxinator::Cli do
         end
       end
 
-      context "files exists" do
-        let(:root_path) { "#{ENV['HOME']}\/\.tmuxinator\/#{name}\.yml" }
+      context "file exists" do
+        let(:root_path) { "#{XDG['CONFIG_HOME']}\/\.tmuxinator\/#{name}\.yml" }
 
         before do
           allow(File).to receive(:exist?).with(anything).and_return(false)
@@ -265,7 +265,7 @@ describe Tmuxinator::Cli do
         end
       end
 
-      context "files exists" do
+      context "project file exists" do
         let(:path) { Tmuxinator::Config::LOCAL_DEFAULT }
         before do
           expect(File).to receive(:exist?).with(path) { true }
