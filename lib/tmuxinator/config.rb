@@ -42,12 +42,16 @@ module Tmuxinator
 
       def config_directory(parent)
         directory = File.expand_path("#{parent}/.tmuxinator")
-        create_directory_if_needed(directory) # XXX remove later
-        directory
+        # create_directory_if_needed(directory) # XXX remove later
+        # directory
       end
 
-      def create_directory_if_needed(dir) # XXXXXXXXXXXXXXX
-        Dir.mkdir(dir) unless File.directory?(dir) # XXX return value
+      # def create_directory_if_needed(dir) # XXXXXXXXXXXXXXX
+      #   Dir.mkdir(dir) unless File.directory?(dir) # XXX return value
+      # end
+
+      def project_in_root(name)
+        project_in(xdg, name) || project_in(home, name)
       end
 
       def project_in(directory, name)
@@ -68,7 +72,7 @@ module Tmuxinator
       def root
         environment = ENV['TMUXINATOR_CONFIG']
         if !String(environment).empty?
-          Dir.mkdir(dir) unless File.directory?(environment)
+          Dir.mkdir(environment) unless File.directory?(environment)
           return environment
         end
         return xdg if File.directory?(xdg)

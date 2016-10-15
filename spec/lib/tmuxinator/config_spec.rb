@@ -2,43 +2,52 @@ require "spec_helper"
 
 describe Tmuxinator::Config do
   describe "#root" do
-    context 'environment variable $TMUXINATOR_CONFIG is set' do
+    context 'environment variable $TMUXINATOR_CONFIG set' do
       it "is $TMUXINATOR_CONFIG" do
-        ENV['TMUXINATOR_CONFIG'] = 'expected'
+        allow(ENV).to receive(:[]).with('TMUXINATOR_CONFIG').and_return 'expected'
+        allow(File).to receive(:directory?).and_return true
         expect(Tmuxinator::Config.root).to eq 'expected'
-      end
-    end
-
-    context "both ~/.tmuxinator and $XDG_CONFIG_HOME/.tmuxinator exist" do
-      context "they are different directories" do
-        it "should raise" do
-          # expect do
-          #   Tmuxinator::Config.validate(name: "sample")
-          # end.to raise_error RuntimeError, %r{configuration}
-          expect do
-            Tmuxinator::Config.root
-          end.to raise_error RuntimeError, %r{configuration}
-        end
-      end
-
-      context "they are the same directory" do
-        it "is that directory" do
-          pending; return
-          expect(Tmuxinator::Config.root).to eq "#{ENV['HOME']}/.tmuxinator"
-        end
-      end
-    end
-
-    context "only $XDG_CONFIG_HOME/.tmuxinator exists" do
-      it "is $XDG_CONFIG_HOME/.tmuxinator" do
-        expect(Tmuxinator::Config.root).to eq "#{XDG['CONFIG_HOME']}/.tmuxinator"
       end
     end
 
     context "only ~/.tmuxinator exists" do
       it "is ~/.tmuxinator" do
-        expect(Tmuxinator::Config.root).to eq "#{ENV['HOME']}/.tmuxinator"
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg).and_return false
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.home).and_return true
+        expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.home
       end
+    end
+  end
+
+    context "only $XDG_CONFIG_HOME/.tmuxinator exists" do
+      it "is $XDG_CONFIG_HOME/.tmuxinator" do
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg).and_return true
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.home).and_return false
+        expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.xdg
+      end
+    end
+
+    context "both $XDG_CONFIG_HOME/.tmuxinator and ~/.tmuxinator" do
+      it "should raise" do
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg).and_return true
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.home).and_return true
+        expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.xdg
+        # expect(Tmuxinator::Config.root).to eq 'expected'
+        # expect do
+        #   Tmuxinator::Config.root
+        # end.to raise_error RuntimeError, %r{configuration}
+      end
+    end
+
+  describe "#home" do
+    it "is $XDG_CONFIG_HOME/.tmuxinator" do
+      expect(Tmuxinator::Config.home).to eq "#{ENV['HOME']}/.tmuxinator"
+    end
+  end
+
+  describe "#xdg" do
+    it "is $XDG_CONFIG_HOME/.tmuxinator" do
+      expect(Tmuxinator::Config.xdg).to eq "#{XDG['CONFIG_HOME']}/.tmuxinator"
     end
   end
 
@@ -107,8 +116,8 @@ describe Tmuxinator::Config do
   describe "#configs" do
     before do
       # allow(Dir).to receive_messages(:[] => ["home.yml", "test2.yml"])
-      allow(Dir).to receive_message(:[]).with(array_including(Tmuxinator::Config.xdg)) { ["xdg.yml", "both.yml"] }
-      allow(Dir).to receive_message(:[]).with(array_including(Tmuxinator::Config.home)) { ["home.yml", "both.yml"] }
+      allow(Dir).to receive(:[]).with(array_including(Tmuxinator::Config.xdg)) { ["xdg.yml", "both.yml"] }
+      allow(Dir).to receive(:[]).with(array_including(Tmuxinator::Config.home)) { ["home.yml", "both.yml"] }
          # Dir["#{home}/**/*.yml"] + Dir["#{home}/**/*.yml"]
       # allow(Dir).to receive_messages(:[] => ["home.yml", "test2.yml"])
         files = Dir["#{home}/**/*.yml"] + Dir["#{home}/**/*.yml"]
