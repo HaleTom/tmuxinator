@@ -114,7 +114,10 @@ module Tmuxinator
       def configs
         # Dir["#{Tmuxinator::Config.root}/**/*.yml"].sort.map do |path| # XXX make home and xdg. What if config appears twice?
         # Dir["#{home}/**/*.yml"].sort.map do |path| # XXX make home and xdg. What if config appears twice?
-        files = Dir["#{home}/**/*.yml"] + Dir["#{home}/**/*.yml"]
+        # files = Dir["#{xdg}/**/*.yml"] + Dir["#{home}/**/*.yml"]
+        # files = Array(Dir["#{xdg}/**/*.yml"]) + Dir["#{home}/**/*.yml"]
+        files = Array(Dir["#{xdg}/**/*.yml"]) + Dir["#{home}/**/*.yml"] # why Array needed?
+        # files = Dir["#{xdg}/*/*.yml", "#{home}/**/*.yml"]
         files.sort.map do |path|
           path.gsub("#{Tmuxinator::Config.root}/", "").gsub(".yml", "")
         end

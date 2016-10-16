@@ -17,7 +17,6 @@ describe Tmuxinator::Config do
         expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.home
       end
     end
-  end
 
     context "only $XDG_CONFIG_HOME/.tmuxinator exists" do
       it "is $XDG_CONFIG_HOME/.tmuxinator" do
@@ -27,17 +26,14 @@ describe Tmuxinator::Config do
       end
     end
 
-    context "both $XDG_CONFIG_HOME/.tmuxinator and ~/.tmuxinator" do
-      it "should raise" do
+    context "both $XDG_CONFIG_HOME/.tmuxinator and ~/.tmuxinator exist" do
+      it "is $XDG_CONFIG_HOME/.tmuxinator" do
         allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg).and_return true
         allow(File).to receive(:directory?).with(Tmuxinator::Config.home).and_return true
         expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.xdg
-        # expect(Tmuxinator::Config.root).to eq 'expected'
-        # expect do
-        #   Tmuxinator::Config.root
-        # end.to raise_error RuntimeError, %r{configuration}
       end
     end
+  end
 
   describe "#home" do
     it "is $XDG_CONFIG_HOME/.tmuxinator" do
@@ -113,17 +109,30 @@ describe Tmuxinator::Config do
     end
   end
 
+  # describe "#configs" do
+  #   before do
+  #     allow(Dir).to receive_messages(:[] => ["test.yml"])
+  #   end
+  #
+  #   it "gets a list of all projects" do
+  #     expect(Tmuxinator::Config.configs).to include("test")
+  #   end
+  # end
+
+
   describe "#configs" do
     before do
       # allow(Dir).to receive_messages(:[] => ["home.yml", "test2.yml"])
-      allow(Dir).to receive(:[]).with(array_including(Tmuxinator::Config.xdg)) { ["xdg.yml", "both.yml"] }
-      allow(Dir).to receive(:[]).with(array_including(Tmuxinator::Config.home)) { ["home.yml", "both.yml"] }
          # Dir["#{home}/**/*.yml"] + Dir["#{home}/**/*.yml"]
       # allow(Dir).to receive_messages(:[] => ["home.yml", "test2.yml"])
-        files = Dir["#{home}/**/*.yml"] + Dir["#{home}/**/*.yml"]
+        # files = Dir["#{home}/**/*.yml"] + Dir["#{home}/**/*.yml"]
     end
 
     it "gets a sorted list of all projects" do
+      allow(Dir).to receive(:[]).with(array_including("#{Tmuxinator::Config.xdg}/**/*.yml")) \
+        { ["subdir/xdg.yml", "both.yml"] }
+      # set fixtures path???
+      allow(Dir).to receive(:[]).with(array_including(Tmuxinator::Config.home)) { ["home.yml", "both.yml"] }
       expect(Tmuxinator::Config.configs).to eq ["both", "both", "home", "xdg"]
     end
 
