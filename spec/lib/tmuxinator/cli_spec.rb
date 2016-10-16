@@ -232,16 +232,15 @@ describe Tmuxinator::Cli do
       end
 
       context "file exists" do
-        let(:root_path) { "#{XDG['CONFIG_HOME']}\/\.tmuxinator\/#{name}\.yml" }
+        let(:project_path) { "#{Tmuxinator::Config.project(name)}" }
 
         before do
           allow(File).to receive(:exist?).with(anything).and_return(false)
-          expect(File).to receive(:exist?).with(root_path).and_return(true)
+          expect(File).to receive(:exist?).with(project_path).and_return(true)
         end
 
         it "just opens the file" do
-          pending
-          expect(Kernel).to receive(:system).with(%r{#{root_path}})
+          expect(Kernel).to receive(:system).with(%r{#{project_path}})
           capture_io { cli.start }
         end
       end

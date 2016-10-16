@@ -14,7 +14,7 @@ module Tmuxinator
         end
         return xdg if File.directory?(xdg)
         return home if File.directory?(home)
-        # No project directory specified or exstant, default to XDG:
+        # No project directory specified or existant, default to XDG:
         Dir.mkdir(xdg)
         xdg
       end
@@ -114,26 +114,25 @@ module Tmuxinator
         asset_path "wemux_template.erb"
       end
 
+      # Sorted list of all projects, including duplicates
       def configs
-        # Dir["#{Tmuxinator::Config.root}/**/*.yml"].sort.map do |path| # XXX make home and xdg. What if config appears twice?
-        # Dir["#{home}/**/*.yml"].sort.map do |path| # XXX make home and xdg. What if config appears twice?
-        # files = Dir["#{xdg}/**/*.yml"] + Dir["#{home}/**/*.yml"]
-        # files = Array(Dir["#{xdg}/**/*.yml"]) + Dir["#{home}/**/*.yml"]
-
-        environment = ENV['TMUXINATOR_CONFIG']
-        if !environment.nil? && !environment.empty?
-          search_dirs = [environment]
-        else
-          search_dirs = [xdg, home]
-        end
-
         configs = []
-        search_dirs.each do |dir|
-          configs += Array(Dir["#{dir}/**/*.yml"]).collect do |config|
-            config.gsub("#{dir}/", "").gsub(".yml", "")
+        directories.each do |directory|
+          configs += Array(Dir["#{directory}/**/*.yml"]).collect do |project|
+            project.gsub("#{directory}/", "").gsub(".yml", "")
           end
         end
         configs.sort
+      end
+
+      # Directories searched for project files
+      def directories
+        environment = ENV['TMUXINATOR_CONFIG']
+        if !environment.nil? && !environment.empty?
+          [environment]
+        else
+          [xdg, home]
+        end
       end
 
       def validate(options = {})
