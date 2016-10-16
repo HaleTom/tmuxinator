@@ -20,15 +20,11 @@ module Tmuxinator
       end
 
       def home
-        config_directory(ENV['HOME'])
+        ENV['HOME'] + "/.tmuxinator"
       end
 
       def xdg
-        config_directory(XDG['CONFIG'])
-      end
-
-      def config_directory(parent)
-        File.expand_path("#{parent}/#{DIRECTORY_NAME_DEFAULT}")
+        XDG['CONFIG'].to_s + "/tmuxinator"
       end
 
       def sample

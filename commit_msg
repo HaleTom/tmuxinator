@@ -1,8 +1,53 @@
-Document in comments and tests the existing behaviour of returning only the first project file found in a recursive search
+Allow explicit config directory and honour XDG Base Dirs Spec
 
-Rename 'project_in_root' -> 'global_project'
-There are now two `.tmuxinator` directores searched by default, and `root` implies only one. `global project` is also shorter.
+Resolve Issue #462 - "Tmuxinator config files in a different location"
+Resolve Issue #360 - "XDG base directory support"
+Mentioned in Issue #427 - "Introduce Analytics Module"
 
-Rename 'project_in_local' -> 'local_project'
+Allow `$TMUXINATOR_CONFIG` to specify a configuration directory, which
+will be created if it doesn't exist.  This directory takes preference
+over honouring the XDG specification (below). If specified, this will be
+the only configuration location used.
+
+Honour the [XDG Base Directories Specification]
+(https://specifications.freedesktop.org/basedir-spec/latest/) with
+regards to user specific configuration files: Look for `tmuxinator`
+configuration files under `$XDG_CONFIG_HOME/tmuxinator`.
+
+For existing setups with no `$XDG_CONFIG_HOME` directory, continue to
+create new projects in `~/.tmuxinator` for backwards compatibility.
+
+If $XDG_CONFIG_HOME/tmuxinator exists, create new projects there.
+
+If neither `~/.tmuxinator` nor `$XDG_CONFIG_HOME/tmuxinator` exist, use
+`$XDG_CONFIG_HOME/tmuxinator` for new projects.
+
+When loading a project, search `$XDG_CONFIG_HOME/tmuxinator` before
+`~/.tmuxinator`.  Document in comments and tests the existing behaviour
+of returning only the first project file found in a recursive search of
+a configuration directory.
+
+Add Config#directories: an array of the configuration director{y,ies}
+which exist. Update commands `implode` and `list` to operate upon this
+array.
+
+Add `alias`es for the 3 renamed methods below for backward
+compatibility:
+
+Rename 'Config#root' -> 'Config#directory'
+This directory is the only one used when creating new project files, and
+may be either `$TMUXINATOR_CONFIG`, `$XDG_CONFIG_HOME/tmuxinator` or
+`~/.tmuxinator`.
+
+Implementing XDG Base Dirs support with backwards compatibility means
+that two directories may contain project files, making the `root`
+nomenclature misleading as it implies a single directory.
+
+Rename `Config#project_in_root` -> `Config#global_project`
+See comment on `root` terminology above.  `global_project` is also
+shorter and corresponds to the naming of `default_project`
+
+Rename `Config#project_in_local` -> `Config#local_project`
 Fit with the naming of both `global_project` and `default_project`
 
+# vim: set ft=gitcommit :
