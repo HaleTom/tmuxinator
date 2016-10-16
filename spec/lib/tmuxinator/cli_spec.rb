@@ -571,7 +571,7 @@ describe Tmuxinator::Cli do
       subject { described_class.new.create_project(params) }
 
       before do
-        allow(Tmuxinator::Config).to receive_messages(root: path)
+        allow(Tmuxinator::Config).to receive_messages(directory: path)
       end
 
       it_should_behave_like :a_proper_project

@@ -231,7 +231,7 @@ module Tmuxinator
 
     def implode
       if yes?("Are you sure you want to delete all tmuxinator configs?", :red)
-        FileUtils.remove_dir(Tmuxinator::Config.root)
+        FileUtils.remove_dir(Tmuxinator::Config.directory) # XXX
         say "Deleted all tmuxinator projects."
       end
     end

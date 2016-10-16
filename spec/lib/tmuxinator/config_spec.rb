@@ -3,13 +3,13 @@ require "spec_helper"
 describe Tmuxinator::Config do
   let(:fixtures_dir) { File.expand_path("../../../fixtures/", __FILE__).freeze }
 
-  describe "#root" do
+  describe "#directory" do
     context 'environment variable $TMUXINATOR_CONFIG set' do
       it "is $TMUXINATOR_CONFIG" do
         allow(ENV).to receive(:[]).with('TMUXINATOR_CONFIG')
           .and_return 'expected'
         allow(File).to receive(:directory?).and_return true
-        expect(Tmuxinator::Config.root).to eq 'expected'
+        expect(Tmuxinator::Config.directory).to eq 'expected'
       end
     end
 
@@ -19,7 +19,7 @@ describe Tmuxinator::Config do
           .and_return false
         allow(File).to receive(:directory?).with(Tmuxinator::Config.home)
           .and_return true
-        expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.home
+        expect(Tmuxinator::Config.directory).to eq Tmuxinator::Config.home
       end
     end
 
@@ -29,7 +29,7 @@ describe Tmuxinator::Config do
           .and_return true
         allow(File).to receive(:directory?).with(Tmuxinator::Config.home)
           .and_return false
-        expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.xdg
+        expect(Tmuxinator::Config.directory).to eq Tmuxinator::Config.xdg
       end
     end
 
@@ -39,7 +39,7 @@ describe Tmuxinator::Config do
           .and_return true
         allow(File).to receive(:directory?).with(Tmuxinator::Config.home)
           .and_return true
-        expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.xdg
+        expect(Tmuxinator::Config.directory).to eq Tmuxinator::Config.xdg
       end
     end
   end
@@ -91,7 +91,7 @@ describe Tmuxinator::Config do
   end
 
   describe "#default?" do
-    let(:root) { Tmuxinator::Config.root }
+    let(:directory) { Tmuxinator::Config.directory }
     let(:local_default) { Tmuxinator::Config::LOCAL_DEFAULT }
     let(:proj_default) { Tmuxinator::Config.default }
 
@@ -234,9 +234,9 @@ describe Tmuxinator::Config do
   end
 
   describe "#global_project" do
-    let(:root) { Tmuxinator::Config.root }
-    let(:base) { "#{root}/sample.yml" }
-    let(:first_dup) { "#{root}/dot-tmuxinator-home/dup/local-dup.yml" }
+    let(:directory) { Tmuxinator::Config.directory }
+    let(:base) { "#{directory}/sample.yml" }
+    let(:first_dup) { "#{directory}/dot-tmuxinator-home/dup/local-dup.yml" }
 
     before do
       allow(Tmuxinator::Config).to receive_messages(xdg: fixtures_dir)
@@ -288,20 +288,20 @@ describe Tmuxinator::Config do
   end
 
   describe "#project" do
-    let(:root) { Tmuxinator::Config.root }
+    let(:directory) { Tmuxinator::Config.directory }
     let(:default) { Tmuxinator::Config::LOCAL_DEFAULT }
 
-    context "with project yml in the root directory" do
+    context "with project yml in the config directory" do
       before do
-        allow(Tmuxinator::Config).to receive_messages(root: fixtures_dir)
+        allow(Tmuxinator::Config).to receive_messages(directory: fixtures_dir)
       end
 
       it "gets the project as path to the yml file" do
-        expect(Tmuxinator::Config.project("sample")).to eq "#{root}/sample.yml"
+        expect(Tmuxinator::Config.project("sample")).to eq "#{directory}/sample.yml"
       end
     end
 
-    context "with a local project, but no project in root" do
+    context "with a local project, but no project in config directory" do
       it "gets the project as path to the yml file" do
         expect(File).to receive(:exist?).with(default) { true }
         expect(Tmuxinator::Config.project("sample")).to eq "./.tmuxinator.yml"
@@ -309,7 +309,7 @@ describe Tmuxinator::Config do
     end
 
     context "without project yml" do
-      let(:expected) { "#{root}/new-project.yml" }
+      let(:expected) { "#{directory}/new-project.yml" }
       it "gets the project as path to the yml file" do
         expect(Tmuxinator::Config.project("new-project")).to eq expected
       end
@@ -327,7 +327,7 @@ describe Tmuxinator::Config do
       end
 
       it "should load and validate the project" do
-        expect(Tmuxinator::Config).to receive_messages(root: fixtures_dir)
+        expect(Tmuxinator::Config).to receive_messages(directory: fixtures_dir)
         expect(Tmuxinator::Config.validate(name: "sample")).to \
           be_a Tmuxinator::Project
       end

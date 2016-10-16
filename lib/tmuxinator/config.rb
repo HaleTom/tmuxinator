@@ -6,7 +6,7 @@ module Tmuxinator
 
     class << self
       # The directory (created if needed) in which to store new projects
-      def root
+      def directory
         environment = ENV['TMUXINATOR_CONFIG']
         if !environment.nil? && !environment.empty?
           Dir.mkdir(environment) unless File.directory?(environment)
@@ -31,16 +31,12 @@ module Tmuxinator
         File.expand_path("#{parent}/#{DIRECTORY_NAME_DEFAULT}")
       end
 
-      # def create_directory_if_needed(dir) # XXXXXXXXXXXXXXX
-      #   Dir.mkdir(dir) unless File.directory?(dir) # XXX return value
-      # end
-
       def sample
         asset_path "sample.yml"
       end
 
       def default
-        "#{root}/default.yml"
+        "#{directory}/default.yml"
       end
 
       def default?
@@ -88,13 +84,12 @@ module Tmuxinator
         local_project
       end
 
-      # project_path_in
       def local_project
         [LOCAL_DEFAULT].detect { |f| File.exist?(f) }
       end
 
       def default_project(name)
-        "#{root}/#{name}.yml"
+        "#{directory}/#{name}.yml"
       end
 
       # Pathname of project file
