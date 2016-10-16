@@ -1,10 +1,13 @@
 require "spec_helper"
 
 describe Tmuxinator::Config do
+  let(:fixtures_dir) { File.expand_path("../../../fixtures/", __FILE__).freeze }
+
   describe "#root" do
     context 'environment variable $TMUXINATOR_CONFIG set' do
       it "is $TMUXINATOR_CONFIG" do
-        allow(ENV).to receive(:[]).with('TMUXINATOR_CONFIG').and_return 'expected'
+        allow(ENV).to receive(:[]).with('TMUXINATOR_CONFIG')
+          .and_return 'expected'
         allow(File).to receive(:directory?).and_return true
         expect(Tmuxinator::Config.root).to eq 'expected'
       end
@@ -12,24 +15,30 @@ describe Tmuxinator::Config do
 
     context "only ~/.tmuxinator exists" do
       it "is ~/.tmuxinator" do
-        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg).and_return false
-        allow(File).to receive(:directory?).with(Tmuxinator::Config.home).and_return true
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg)
+          .and_return false
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.home)
+          .and_return true
         expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.home
       end
     end
 
     context "only $XDG_CONFIG_HOME/.tmuxinator exists" do
       it "is $XDG_CONFIG_HOME/.tmuxinator" do
-        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg).and_return true
-        allow(File).to receive(:directory?).with(Tmuxinator::Config.home).and_return false
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg)
+          .and_return true
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.home)
+          .and_return false
         expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.xdg
       end
     end
 
     context "both $XDG_CONFIG_HOME/.tmuxinator and ~/.tmuxinator exist" do
       it "is $XDG_CONFIG_HOME/.tmuxinator" do
-        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg).and_return true
-        allow(File).to receive(:directory?).with(Tmuxinator::Config.home).and_return true
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg)
+          .and_return true
+        allow(File).to receive(:directory?).with(Tmuxinator::Config.home)
+          .and_return true
         expect(Tmuxinator::Config.root).to eq Tmuxinator::Config.xdg
       end
     end
@@ -128,15 +137,23 @@ describe Tmuxinator::Config do
         # files = Dir["#{home}/**/*.yml"] + Dir["#{home}/**/*.yml"]
     end
 
-    it "gets a sorted list of all projects" do
-      allow(Dir).to receive(:[]).with(array_including("#{Tmuxinator::Config.xdg}/**/*.yml")) \
-        { ["subdir/xdg.yml", "both.yml"] }
-      # set fixtures path???
-      allow(Dir).to receive(:[]).with(array_including(Tmuxinator::Config.home)) { ["home.yml", "both.yml"] }
-      expect(Tmuxinator::Config.configs).to eq ["both", "both", "home", "xdg"]
+    before do
+      allow(Tmuxinator::Config).to receive_messages(xdg: "#{fixtures_dir}/dot-tmuxinator-xdg")
+      allow(Tmuxinator::Config).to receive_messages(home: "#{fixtures_dir}/dot-tmuxinator-home")
     end
 
-    it "lists only projects in $TMUXINATOR_CONFIG when set"
+    it "gets a sorted list of all projects" do
+      # allow(Dir).to receive(:[]).with(array_including("#{Tmuxinator::Config.xdg}/**/*.yml")) \
+      #   { ["subdir/xdg.yml", "both.yml"] }
+      # allow(Dir).to receive(:[]).with(array_including(Tmuxinator::Config.home)) { ["home.yml", "both.yml"] }
+      expect(Tmuxinator::Config.configs).to eq ["both", "both", "dup/local-dup", "home", "local-dup", "xdg"]
+    end
+
+    it "lists only projects in $TMUXINATOR_CONFIG when set" do
+      allow(ENV).to receive(:[]).with('TMUXINATOR_CONFIG')
+        .and_return "#{fixtures_dir}/dot-TMUXINATOR_CONFIG"
+      expect(Tmuxinator::Config.configs).to eq ["TMUXINATOR_CONFIG"]
+    end
   end
 
   describe "#installed?" do
@@ -216,25 +233,31 @@ describe Tmuxinator::Config do
     end
   end
 
-  describe "#project_in_root" do
+  describe "#global_project" do
     let(:root) { Tmuxinator::Config.root }
     let(:base) { "#{root}/sample.yml" }
+    let(:first_dup) { "#{root}/dot-tmuxinator-home/dup/local-dup.yml" }
 
     before do
-      path = File.expand_path("../../../fixtures/", __FILE__)
-      allow(Tmuxinator::Config).to receive_messages(xdg: path)
-      allow(Tmuxinator::Config).to receive_messages(home: path)
+      allow(Tmuxinator::Config).to receive_messages(xdg: fixtures_dir)
+      allow(Tmuxinator::Config).to receive_messages(home: fixtures_dir)
     end
 
     context "with project yml" do
       it "gets the project as path to the yml file" do
-        expect(Tmuxinator::Config.project_in_root("sample")).to eq base
+        expect(Tmuxinator::Config.global_project("sample")).to eq base
       end
     end
 
     context "without project yml" do
       it "gets the project as path to the yml file" do
-        expect(Tmuxinator::Config.project_in_root("new-project")).to be_nil
+        expect(Tmuxinator::Config.global_project("new-project")).to be_nil
+      end
+    end
+
+    context "with duplicate project files" do
+      it "gets path of the first matching yml file" do
+        expect(Tmuxinator::Config.global_project("local-dup")).to eq first_dup
       end
     end
   end
@@ -247,31 +270,30 @@ describe Tmuxinator::Config do
     end
   end
 
-  describe "#project_in_local" do
+  describe "#local_project" do
     let(:default) { Tmuxinator::Config::LOCAL_DEFAULT }
 
     context "with a project yml" do
       it "gets the project as path to the yml file" do
         expect(File).to receive(:exist?).with(default) { true }
-        expect(Tmuxinator::Config.project_in_local).to eq default
+        expect(Tmuxinator::Config.local_project).to eq default
       end
     end
 
     context "without project yml" do
       it "gets the project as path to the yml file" do
-        expect(Tmuxinator::Config.project_in_local).to be_nil
+        expect(Tmuxinator::Config.local_project).to be_nil
       end
     end
   end
 
   describe "#project" do
     let(:root) { Tmuxinator::Config.root }
-    let(:path) { File.expand_path("../../../fixtures/", __FILE__) }
     let(:default) { Tmuxinator::Config::LOCAL_DEFAULT }
 
     context "with project yml in the root directory" do
       before do
-        allow(Tmuxinator::Config).to receive_messages(root: path)
+        allow(Tmuxinator::Config).to receive_messages(root: fixtures_dir)
       end
 
       it "gets the project as path to the yml file" do
@@ -295,7 +317,6 @@ describe Tmuxinator::Config do
   end
 
   describe "#validate" do
-    let(:path) { File.expand_path("../../../fixtures", __FILE__) }
     let(:default) { Tmuxinator::Config::LOCAL_DEFAULT }
 
     context "when a project name is provided" do
@@ -306,7 +327,7 @@ describe Tmuxinator::Config do
       end
 
       it "should load and validate the project" do
-        expect(Tmuxinator::Config).to receive_messages(root: path)
+        expect(Tmuxinator::Config).to receive_messages(root: fixtures_dir)
         expect(Tmuxinator::Config.validate(name: "sample")).to \
           be_a Tmuxinator::Project
       end
@@ -321,7 +342,7 @@ describe Tmuxinator::Config do
       end
 
       it "should load and validate the project" do
-        content = File.read(File.join(path, "sample.yml"))
+        content = File.read(File.join(fixtures_dir, "sample.yml"))
 
         expect(File).to receive(:exist?).with(default).at_least(:once) { true }
         expect(File).to receive(:read).with(default).and_return(content)

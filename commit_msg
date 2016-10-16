@@ -1,0 +1,8 @@
+Document in comments and tests the existing behaviour of returning only the first project file found in a recursive search
+
+Rename 'project_in_root' -> 'global_project'
+There are now two `.tmuxinator` directores searched by default, and `root` implies only one. `global project` is also shorter.
+
+Rename 'project_in_local' -> 'local_project'
+Fit with the naming of both `global_project` and `default_project`
+
