@@ -222,7 +222,8 @@ describe Tmuxinator::Config do
 
     before do
       path = File.expand_path("../../../fixtures/", __FILE__)
-      allow(Tmuxinator::Config).to receive_messages(root: path)
+      allow(Tmuxinator::Config).to receive_messages(xdg: path)
+      allow(Tmuxinator::Config).to receive_messages(home: path)
     end
 
     context "with project yml" do

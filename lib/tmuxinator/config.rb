@@ -9,7 +9,7 @@ module Tmuxinator
       end
 
       def default
-        "#{ENV['HOME']}/.tmuxinator/default.yml" # XXX
+        "#{root}/default.yml" # XXX
       end
 
       def default?
@@ -42,8 +42,6 @@ module Tmuxinator
 
       def config_directory(parent)
         directory = File.expand_path("#{parent}/.tmuxinator")
-        # create_directory_if_needed(directory) # XXX remove later
-        # directory
       end
 
       # def create_directory_if_needed(dir) # XXXXXXXXXXXXXXX
