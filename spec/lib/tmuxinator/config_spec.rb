@@ -23,8 +23,8 @@ describe Tmuxinator::Config do
       end
     end
 
-    context "only $XDG_CONFIG_HOME/.tmuxinator exists" do
-      it "is $XDG_CONFIG_HOME/.tmuxinator" do
+    context "only $XDG_CONFIG_HOME/tmuxinator exists" do
+      it "is #xdg" do
         allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg)
           .and_return true
         allow(File).to receive(:directory?).with(Tmuxinator::Config.home)
@@ -33,8 +33,8 @@ describe Tmuxinator::Config do
       end
     end
 
-    context "both $XDG_CONFIG_HOME/.tmuxinator and ~/.tmuxinator exist" do
-      it "is $XDG_CONFIG_HOME/.tmuxinator" do
+    context "both $XDG_CONFIG_HOME/tmuxinator and ~/.tmuxinator exist" do
+      it "is #home" do
         allow(File).to receive(:directory?).with(Tmuxinator::Config.xdg)
           .and_return true
         allow(File).to receive(:directory?).with(Tmuxinator::Config.home)
@@ -45,14 +45,14 @@ describe Tmuxinator::Config do
   end
 
   describe "#home" do
-    it "is $XDG_CONFIG_HOME/.tmuxinator" do
+    it "is ~/.tmuxinator" do
       expect(Tmuxinator::Config.home).to eq "#{ENV['HOME']}/.tmuxinator"
     end
   end
 
   describe "#xdg" do
-    it "is $XDG_CONFIG_HOME/.tmuxinator" do
-      expect(Tmuxinator::Config.xdg).to eq "#{XDG['CONFIG_HOME']}/.tmuxinator"
+    it "is $XDG_CONFIG_HOME/tmuxinator" do
+      expect(Tmuxinator::Config.xdg).to eq "#{XDG['CONFIG_HOME']}/tmuxinator"
     end
   end
 
