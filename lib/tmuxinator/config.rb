@@ -1,6 +1,5 @@
 module Tmuxinator
   class Config
-    DIRECTORY_NAME_DEFAULT = ".tmuxinator".freeze
     LOCAL_DEFAULT = "./.tmuxinator.yml".freeze
     NO_LOCAL_FILE_MSG = "Project file at ./.tmuxinator.yml doesn't exist."
 
@@ -65,15 +64,9 @@ module Tmuxinator
 
       # The first project found matching 'name'
       def global_project(name)
-        project_in(xdg, name) || project_in(home, name)
-      end
-
-      # The first pathname of the project named 'name' found while
-      # recursively searching 'directory'
-      def project_in(directory, name)
-        return nil if String(directory).empty?
-        projects = Dir.glob("#{directory}/**/*.yml")
-        projects.detect { |project| File.basename(project, ".yml") == name }
+        project_in(ENV['TMUXINATOR_CONFIG'], name) ||
+        project_in(xdg, name) ||
+        project_in(home, name)
       end
 
       def local?
@@ -105,24 +98,26 @@ module Tmuxinator
         asset_path "wemux_template.erb"
       end
 
-      # Sorted list of all projects, including duplicates
+      # Sorted list of all .yml files, including duplicates
       def configs
         configs = []
         directories.each do |directory|
-          configs += Array(Dir["#{directory}/**/*.yml"]).collect do |project|
-            project.gsub("#{directory}/", "").gsub(".yml", "")
+          configs += Dir["#{directory}/**/*.yml"].collect do |path|
+            path.gsub("#{directory}/", "").gsub(".yml", "")
           end
         end
         configs.sort
       end
 
-      # Directories searched for project files
+      # Existant directories which may contain project files
+      # Listed in search order
+      # Used by `implode` and `list` commands
       def directories
         environment = ENV['TMUXINATOR_CONFIG']
         if !environment.nil? && !environment.empty?
           [environment]
         else
-          [xdg, home]
+          [xdg, home].select { |d| File.directory? d }
         end
       end
 
@@ -147,6 +142,14 @@ module Tmuxinator
 
       def asset_path(asset)
         "#{File.dirname(__FILE__)}/assets/#{asset}"
+      end
+
+      # The first pathname of the project named 'name' found while
+      # recursively searching 'directory'
+      def project_in(directory, name)
+        return nil if String(directory).empty?
+        projects = Dir.glob("#{directory}/**/*.yml")
+        projects.detect { |project| File.basename(project, ".yml") == name }
       end
     end
   end

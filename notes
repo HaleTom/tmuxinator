@@ -1,7 +1,0 @@
-Use TMUXINATOR_DIR if defined && not blank
-
-xdg_config_dir
-  Use $XDG_CONFIG_HOME if defined && non-blank
-  Use $HOME/.config/ otherwise
-
-Error if also $HOME
